@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=utf-8 />
+    <title>A Simple Directions Map</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox.js/v2.1.5/mapbox.js'></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="//api.tiles.mapbox.com/mapbox.js/plugins/turf/v2.0.0/turf.min.js"></script>
+    <script src='osmtogeojson.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox.js/v2.1.5/mapbox.css' rel='stylesheet' />
+    <style>
+    body { margin:0; padding:0; }
+    #map { position:fixed; top:0; bottom:0; width:100%; z-index: 0;}
+    </style>
+</head>
+<body>
+    <div id='map'></div>
+
+    <script>
+
+    L.mapbox.accessToken = 'pk.eyJ1Ijoic3JpdmlkeWEiLCJhIjoicXo2NTJKayJ9.m1P57SCwkp8_7N3TgYsVRg';
+    var map = L.mapbox.map('map', 'mapbox.streets')
+    .setView([12.9861, 77.5930], 13);
+
+
+    map.on('click', function(e) {
+        makeMarker(e, drawRoute);
+    });
+
+    var waypoints = [];
+    var polyline = L.polyline([]).addTo(map);
+
+    function makeMarker(e, done) {
+        var marker = L.marker(e.latlng, { draggable: true }).addTo(map);
+        marker.on('dragend', drawRoute);
+        waypoints.push(marker);
+        return done();
+    }
+    var routeLayer = L.mapbox.featureLayer().addTo(map);
+
+    function drawRoute() {
+        if (waypoints.length < 2) return;
+        // Directions API request looks like
+        // http://api.tiles.mapbox.com/v4/directions/mapbox.driving/
+        //    latlong.json?access_token={access_token}
+        var points = waypoints.map(function(marker) {
+            var latlng = marker._latlng;
+            return [latlng.lng, latlng.lat].join(',');
+        }).join(';');
+
+        var directionsUrl = 'http://api.tiles.mapbox.com/v4/directions/mapbox.driving/' +
+        points + '.json?access_token=' + L.mapbox.accessToken;
+
+        var route;
+        $.get(directionsUrl, function(data) {
+            console.log(data)
+            routeLayer.setGeoJSON(data.routes[0].geometry);
+            console.log(data)
+            calculateBuffer();
+          });
+}
+//Buffer layer
+//var osmtogeojson;
+var bufferLayer = L.mapbox.featureLayer().addTo(map);
+function calculateBuffer() {
+    var routes = turf.featurecollection(routeLayer.getLayers().map(function(f){
+            return f.toGeoJSON();
+        }));
+    var buffer = turf.buffer(routes, 200, 'meters');
+    console.log(buffer);
+    routeLayer.setGeoJSON(buffer);
+    var bbox = routeLayer.getBounds().toBBoxString().split(',');
+    var overpassBbox = bbox[1]+','+bbox[0]+','+bbox[3]+','+bbox[2];
+    console.log(overpassBbox);
+
+    var data;
+    var url = "http://overpass.osm.rambler.ru/cgi/interpreter?data=[out:json];way['amenity'='hospital']("+overpassBbox+");out;";
+        $.ajax(url)
+            .done(function(data) {
+                console.log(data);
+                var marker = new L.Marker([data.lat, data.lon]).bindLabel(data.name).addTo(map);
+            });
+}
+
+
+//POI layer
+// 1. get the bounding box of the buffer layer - bufferLayer.getBounds
+// 2. use this bounds to get all points from overpass. - 1032
+// 3. this will give you OSM json
+// 4. convert the OSM json to geojson - osmtogeojson/turf.
+// 5. turf.within(route, geojson^)
+
+</script>
+
+</body>
+</html>
