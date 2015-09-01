@@ -49,7 +49,7 @@
             return [latlng.lng, latlng.lat].join(',');
         }).join(';');
 
-        var directionsUrl = 'http://api.tiles.mapbox.com/v4/directions/mapbox.driving/' +
+        var directionsUrl = 'https://api.tiles.mapbox.com/v4/directions/mapbox.driving/' +
         points + '.json?access_token=' + L.mapbox.accessToken;
 
         var route;
