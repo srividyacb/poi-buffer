@@ -145,10 +145,6 @@
             console.log(overpassBbox);
             var url = "http://overpass.osm.rambler.ru/cgi/interpreter?data=[out:json];node['amenity'](" + overpassBbox + ");out;";
 
-            map.gridLayer.on('click', function (e) {
-                map.setView([bbox], 13);
-            });
-
             $.ajax(url)
                 .done(function (data) {
                     console.log(data);
