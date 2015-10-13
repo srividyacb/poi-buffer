@@ -75,8 +75,72 @@
                     //weight: 3
                 });
 
+<<<<<<< HEAD
                 map.fitBounds(routeLayer.getBounds());
                 calculateBuffer();
+=======
+    L.mapbox.accessToken = 'pk.eyJ1Ijoic3JpdmlkeWEiLCJhIjoicXo2NTJKayJ9.m1P57SCwkp8_7N3TgYsVRg';
+    var map = L.mapbox.map('map', 'mapbox.streets')
+    .setView([12.9861, 77.5930], 13);
+
+
+    map.on('click', function(e) {
+        makeMarker(e, drawRoute);
+    });
+
+    var waypoints = [];
+    var polyline = L.polyline([]).addTo(map);
+
+    function makeMarker(e, done) {
+        var marker = L.marker(e.latlng, { draggable: true }).addTo(map);
+        marker.on('dragend', drawRoute);
+        waypoints.push(marker);
+        return done();
+    }
+    var routeLayer = L.mapbox.featureLayer().addTo(map);
+
+    function drawRoute() {
+        if (waypoints.length < 2) return;
+        // Directions API request looks like
+        // http://api.tiles.mapbox.com/v4/directions/mapbox.driving/
+        //    latlong.json?access_token={access_token}
+        var points = waypoints.map(function(marker) {
+            var latlng = marker._latlng;
+            return [latlng.lng, latlng.lat].join(',');
+        }).join(';');
+
+        var directionsUrl = 'https://api.tiles.mapbox.com/v4/directions/mapbox.driving/' +
+        points + '.json?access_token=' + L.mapbox.accessToken;
+
+        var route;
+        $.get(directionsUrl, function(data) {
+            console.log(data)
+            routeLayer.setGeoJSON(data.routes[0].geometry);
+            console.log(data)
+            calculateBuffer();
+          });
+}
+//Buffer layer
+//var osmtogeojson;
+var bufferLayer = L.mapbox.featureLayer().addTo(map);
+function calculateBuffer() {
+    var routes = turf.featurecollection(routeLayer.getLayers().map(function(f){
+            return f.toGeoJSON();
+        }));
+    var buffer = turf.buffer(routes, 200, 'meters');
+    console.log(buffer);
+    routeLayer.setGeoJSON(buffer);
+    var bbox = routeLayer.getBounds().toBBoxString().split(',');
+    var overpassBbox = bbox[1]+','+bbox[0]+','+bbox[3]+','+bbox[2];
+    console.log(overpassBbox);
+
+    var data;
+    var url = "http://overpass.osm.rambler.ru/cgi/interpreter?data=[out:json];way['amenity'='hospital']("+overpassBbox+");out;";
+        $.ajax(url)
+            .done(function(data) {
+                console.log(data);
+                var marker = new L.Marker([data.lat, data.lon]).bindLabel(data.name).addTo(map);
+>>>>>>> 3044267303810f1419e53c763d5dc738a149976f
             });
         }
 
