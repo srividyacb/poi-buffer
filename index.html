@@ -80,49 +80,6 @@
                 calculateBuffer();
             });
         }
-        L.mapbox.accessToken = 'pk.eyJ1Ijoic3JpdmlkeWEiLCJhIjoicXo2NTJKayJ9.m1P57SCwkp8_7N3TgYsVRg';
-        var map = L.mapbox.map('map', 'mapbox.streets')
-            .setView([12.9861, 77.5930], 13);
-
-
-        map.on('click', function (e) {
-            makeMarker(e, drawRoute);
-        });
-
-        var waypoints = [];
-        var polyline = L.polyline([]).addTo(map);
-
-        function makeMarker(e, done) {
-            var marker = L.marker(e.latlng, {
-                draggable: true
-            }).addTo(map);
-            marker.on('dragend', drawRoute);
-            waypoints.push(marker);
-            return done();
-        }
-        var routeLayer = L.mapbox.featureLayer().addTo(map);
-
-        function drawRoute() {
-            if (waypoints.length < 2) return;
-            // Directions API request looks like
-            // http://api.tiles.mapbox.com/v4/directions/mapbox.driving/
-            //    latlong.json?access_token={access_token}
-            var points = waypoints.map(function (marker) {
-                var latlng = marker._latlng;
-                return [latlng.lng, latlng.lat].join(',');
-            }).join(';');
-
-            var directionsUrl = 'https://api.tiles.mapbox.com/v4/directions/mapbox.driving/' +
-                points + '.json?access_token=' + L.mapbox.accessToken;
-
-            var route;
-            $.get(directionsUrl, function (data) {
-                console.log(data)
-                routeLayer.setGeoJSON(data.routes[0].geometry);
-                console.log(data)
-                calculateBuffer();
-            });
-        }
 
         function calculateBuffer() {
             var routes = turf.featurecollection(routeLayer.getLayers().map(function (f) {
