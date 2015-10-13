@@ -86,7 +86,7 @@
                 return f.toGeoJSON();
             }));
             var buffer = turf.buffer(routes, 200, 'meters');
-            console.log(buffer);
+            // console.log(buffer);
             routeLayer.setGeoJSON(buffer);
             routeLayer
                 .setGeoJSON(buffer)
@@ -99,12 +99,12 @@
 
             var bbox = routeLayer.getBounds().toBBoxString().split(',');
             var overpassBbox = bbox[1] + ',' + bbox[0] + ',' + bbox[3] + ',' + bbox[2];
-            console.log(overpassBbox);
+            //console.log(overpassBbox);
             var url = "http://overpass.osm.rambler.ru/cgi/interpreter?data=[out:json];node['amenity'](" + overpassBbox + ");out;";
 
             $.ajax(url)
                 .done(function (data) {
-                    console.log(data);
+                    //console.log(data);
                     var pointsGeoJSON = {
                         'type': 'FeatureCollection',
                         'features': []
@@ -156,7 +156,7 @@
 
                     function poiWithin() {
                         var within = turf.within(poiLayer.getGeoJSON(), buffer);
-                        console.log(within);
+                        // console.log(within);
                         poiLayer.setGeoJSON(within);
                     }
                 });
