@@ -67,9 +67,9 @@
                 points + '.json?access_token=' + L.mapbox.accessToken;
 
             $.get(directionsUrl, function (data) {
-                console.log(data)
+                //console.log(data)
                 routeLayer.setGeoJSON(data.routes[0].geometry);
-                console.log(data)
+                //console.log(data)
                 routeLayer.setStyle({
                     color: 'black',
                     //weight: 3
