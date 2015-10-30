@@ -100,36 +100,12 @@
             var bbox = routeLayer.getBounds().toBBoxString().split(',');
             var overpassBbox = bbox[1] + ',' + bbox[0] + ',' + bbox[3] + ',' + bbox[2];
             //console.log(overpassBbox);
-            var url = "http://overpass.osm.rambler.ru/cgi/interpreter?data=[out:json];node['amenity'](" + overpassBbox + ");out;";
+            var url = "http://www.overpass-api.de/api/interpreter?data=[out:json];node['amenity'](" + overpassBbox + ");out;";
 
             $.ajax(url)
                 .done(function (data) {
                     //console.log(data);
-                    var pointsGeoJSON = {
-                        'type': 'FeatureCollection',
-                        'features': []
-                    };
-                    for (var i = 0; i <= data.elements.length; i++) {
-                        var point = data.elements[i];
-                        if (point && point.lat && point.lon) {
-                            var props = point.tags;
-                            props.title = point.tags.name;
-                            props['marker-color'] = "#CCCC00";
-                            props['marker-size'] = 'medium';
-                            props['marker-symbol'] = 'circle';
-                            var geojson = {
-                                'type': 'Feature',
-                                "properties": props,
-                                'geometry': {
-                                    'type': 'Point',
-                                    'coordinates': [point.lon, point.lat]
-                                }
-                            };
-                            pointsGeoJSON.features.push(geojson);
-                            // console.log(geojson);
-                        }
-                    }
-
+                    var pointsGeoJSON = overpassToGeoJSON(data);
                     var amenityMap = {
                         'hospital': 'hospital.svg',
                         'bank': 'bank.svg',
@@ -159,7 +135,39 @@
                         // console.log(within);
                         poiLayer.setGeoJSON(within);
                     }
+                })
+                .fail(function (err) {
+                    alert("overpass query failed!");
                 });
+        }
+
+        function overpassToGeoJSON(data) {
+            var pointsGeoJSON = {
+                'type': 'FeatureCollection',
+                'features': []
+            };
+            for (var i = 0; i <= data.elements.length; i++) {
+                var point = data.elements[i];
+                if (point && point.lat && point.lon) {
+                    var props = point.tags;
+                    props.title = point.tags.name;
+                    props['marker-color'] = "#CCCC00";
+                    props['marker-size'] = 'medium';
+                    props['marker-symbol'] = 'circle';
+                    var geojson = {
+                        'type': 'Feature',
+                        "properties": props,
+                        'geometry': {
+                            'type': 'Point',
+                            'coordinates': [point.lon, point.lat]
+                        }
+                    };
+                    pointsGeoJSON.features.push(geojson);
+                    // console.log(geojson);
+                }
+            }
+            return pointsGeoJSON;
+
         }
     </script>
 
